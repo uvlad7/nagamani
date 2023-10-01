@@ -13,8 +13,22 @@ def py_call
   )
 
   argv = Fiddle::Pointer.malloc(Fiddle::SIZEOF_VOIDP * 2, Fiddle::RUBY_FREE)
-  argv[0, Fiddle::SIZEOF_VOIDP] = create_string_buffer('nagamani').ref
-  argv[Fiddle::SIZEOF_VOIDP, Fiddle::SIZEOF_VOIDP] = create_string_buffer('hello.py').ref
+  # Important! as argv doensn't mark original buffers for the GC,
+  # so they can be garbage collected.
+
+  #   # Check
+  # argv = Fiddle::Pointer.malloc(Fiddle::SIZEOF_VOIDP * 2, Fiddle::RUBY_FREE)
+  # argv[0, Fiddle::SIZEOF_VOIDP] = create_string_buffer('nagamani').ref
+  # argv[Fiddle::SIZEOF_VOIDP, Fiddle::SIZEOF_VOIDP] = create_string_buffer('hello.py').ref
+  # GC.start
+  # argv[0, Fiddle::SIZEOF_VOIDP * 2].unpack('J*').map { |p| Fiddle::Pointer.new(p).to_s }
+  # #   => ["$", "\x10\xFFt%\t\x7F"]
+
+  # Note: buffers mark original strings, so there is no need to keep them explicitly.
+  pname = create_string_buffer('nagamani')
+  fname = create_string_buffer('hello.py')
+  argv[0, Fiddle::SIZEOF_VOIDP] = pname.ref
+  argv[Fiddle::SIZEOF_VOIDP, Fiddle::SIZEOF_VOIDP] = fname.ref
   retval = py_bytes_main.call(2, argv)
   exit(retval)
 end

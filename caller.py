@@ -37,6 +37,17 @@ def rb_call():
     argv = (c_char_p * 2)()
     argv[0] = ctypes.create_string_buffer(b"nagamani")
     argv[1] = ctypes.create_string_buffer(b"hello.rb")
+    # Looks like argv prevents buffers from being garbage collected
+    # import gc
+    # gc.collect()
+    # list(map(lambda ptr: ctypes.string_at(ptr).decode(), argv))
+    # => ['nagamani', 'hello.rb']
+    # And it looks reasonable, because it's not just a raw pointer, it's LP_c_char_Array_2
+    # But I actually wasn't able to reproduce broken results even with this
+    # ptr = ctypes.cast(ctypes.create_string_buffer(b"nagamani"), ctypes.c_char_p)
+    # gc.collect()
+    # ctypes.cast(ptr, ctypes.c_char_p).value.decode()
+    # => 'nagamani'
     libruby.ruby_init()
     retval = libruby.ruby_run_node(libruby.ruby_options(2, argv))
     exit(retval)
