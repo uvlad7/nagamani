@@ -34,7 +34,7 @@ def linked_libruby_unix
     Fiddle::TYPE_INT
   )
 
-  dlinfo = Dl_info.malloc
+  dlinfo = Dl_info.malloc(Fiddle::RUBY_FREE)
   retcode = dladdr.call(
     Fiddle::Pointer.new(curr_process['ruby_show_version']),
     dlinfo
